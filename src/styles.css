@@ -117,3 +117,23 @@ footer { padding: 45px 0; font-size: 12px; color: #9da793; max-width: 700px; }
   .version { overflow-wrap: anywhere; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+
+.custom-odds > .muted { margin: 15px 0; max-width: 750px; }
+.custom-odds-row { min-width: 0; border: 1px solid #435039; border-radius: 9px; padding: 18px; margin: 22px 0 0; }
+.custom-odds-row legend { padding: 0 8px; font-size: 15px; font-weight: 600; }
+.custom-odds-controls { display: grid; grid-template-columns: 230px minmax(0, 1fr) auto; gap: 24px; align-items: end; }
+.custom-odds-controls label { display: block; font-size: 12px; color: #c7d0be; margin-bottom: 7px; }
+.custom-odds-controls input { font: inherit; min-height: 44px; width: 100%; }
+.custom-number input { background: #10170c; border: 1px solid #68785a; color: #edf0e9; border-radius: 6px; padding: 8px 12px; }
+.custom-slider input { display: block; margin: 0; accent-color: #c8f58a; cursor: pointer; }
+.custom-odds-controls input:disabled { opacity: .6; cursor: not-allowed; }
+.custom-odds-controls button[aria-pressed="true"] { background: #344627; border-color: #a8cd78; }
+.custom-hint { font-size: 12px; margin: 12px 0 0; }
+.field-error { color: #ffd1bc; font-size: 13px; margin: 10px 0 0; }
+.custom-number input[aria-invalid="true"] { border-color: #ffb796; }
+.custom-status { margin: 22px 0 0; line-height: 1.7; }
+@media (max-width: 800px) {
+  .custom-odds-controls { grid-template-columns: minmax(0, 1fr) auto; gap: 16px; }
+  .custom-slider { grid-column: 1 / -1; grid-row: 2; }
+  .custom-odds-controls label { font-size: 11px; }
+}
