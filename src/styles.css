@@ -134,6 +134,7 @@ footer { padding: 45px 0; font-size: 12px; color: #9da793; max-width: 700px; }
 .custom-status { margin: 22px 0 0; line-height: 1.7; }
 @media (max-width: 800px) {
   .custom-odds-controls { grid-template-columns: minmax(0, 1fr) auto; gap: 16px; }
-  .custom-slider { grid-column: 1 / -1; grid-row: 2; }
+  .custom-number { grid-column: 1 / -1; }
+  .custom-slider { grid-column: 1; grid-row: 2; }
   .custom-odds-controls label { font-size: 11px; }
 }
