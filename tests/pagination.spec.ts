@@ -18,7 +18,7 @@ async function assertPointerTarget(button: Locator) {
 test("both pagers are independently clickable and preserve selections at every target width", async ({ page }, info) => {
   for (const size of viewports(info)) {
     await page.setViewportSize(size);
-    await page.goto("/#catalog-preview");
+    await page.goto(`/?demo=true&viewport=${size.width}#catalog-preview`);
     const catalog = page.getByRole("region", { name: "Custom pack catalog", exact: true });
     const top = catalog.getByRole("navigation", { name: "Top catalog pagination" });
     const bottom = catalog.getByRole("navigation", { name: "Bottom catalog pagination" });
@@ -68,7 +68,7 @@ test("both pagers are independently clickable and preserve selections at every t
 test("sorting and filters reset the page without clearing selected card IDs", async ({ page }, info) => {
   for (const size of viewports(info)) {
     await page.setViewportSize(size);
-    await page.goto("/#catalog-preview");
+    await page.goto(`/?demo=true&viewport=${size.width}#catalog-preview`);
     const catalog = page.getByRole("region", { name: "Custom pack catalog", exact: true });
     const top = catalog.getByRole("navigation", { name: "Top catalog pagination" });
     const bottom = catalog.getByRole("navigation", { name: "Bottom catalog pagination" });
@@ -95,7 +95,7 @@ test("sorting and filters reset the page without clearing selected card IDs", as
 test("both pagers support keyboard activation and announce the shared page", async ({ page }, info) => {
   for (const size of viewports(info)) {
     await page.setViewportSize(size);
-    await page.goto("/#catalog-preview");
+    await page.goto(`/?demo=true&viewport=${size.width}#catalog-preview`);
     const catalog = page.getByRole("region", { name: "Custom pack catalog", exact: true });
     const next = catalog.getByRole("navigation", { name: "Top catalog pagination" }).getByRole("button", { name: "Next page" });
     await next.focus();
