@@ -1,6 +1,6 @@
 # CatchBack fix proposals
 
-A runnable React/TypeScript proposal for two observed UX issues. This workspace started empty; it contains no CatchBack source code. All data and paid-success responses are local fixtures. Nothing here buys a pack, creates an account, adds a card to a real vault, or calls CatchBack services. Nothing has been deployed.
+A runnable React/TypeScript proposal for three observed UX issues. This workspace started empty; it contains no CatchBack source code. All data and paid-success responses are local fixtures. Nothing here buys a pack, creates an account, adds a card to a real vault, or calls CatchBack services. Nothing has been deployed.
 
 ## Run
 
@@ -49,6 +49,16 @@ The server must independently enforce the applicable pack version and odds when 
 
 Implement the adapter against the real authenticated service, whose response must confirm the current user's access, settled payment, and persisted vault award. A settlement without an award remains pending. Unauthorized, missing, refunded/invalid as applicable, or mismatched records must not return an awarded response. Keep actual awarding in the existing authoritative, idempotent backend flow; rendering or refreshing a success page must not create an award. This proposal does not assume any specific API route, database, payment provider, or existing architecture.
 
+## 3. Keyboard-accessible custom odds
+
+**Problem:** The supplied QA report records an editable percentage implemented as a span and a visual slider implemented as a div, neither reachable by Tab. A pointer edit from 20% to 30% redistributed the four other equal probabilities to 17.5% each.
+
+**Proposal:** `src/CustomOddsEditor.tsx` uses labelled native number and range inputs. Tab reaches the percentage, slider, and lock button in order. Numeric edits apply on Enter or blur; Escape cancels a draft. Sliders support native keyboard controls, pointer, and touch. Visible focus, accessible percent values, inline errors associated with their inputs, and a polite announcement explain recalculated probabilities. Announcements wait 300 ms after changes to avoid announcing every slider movement. This DOM behavior is tested; actual screen-reader speech still needs manual checks in the real app.
+
+`src/customOdds.ts` maintains a 100% total using integer basis points. The example redistribution policy preserves locked values and distributes the remainder proportionally among unlocked cards. When all peer weights are zero, it uses equal shares. Deterministic remainder allocation avoids rounding loss. When every peer is locked, editing is disabled with an explanation. Reset restores five illustrative cards at 20% and unlocks them. Empty, invalid, out-of-range, and over-precise numeric drafts leave the underlying odds unchanged.
+
+This policy is an illustrative implementation, not a claim about CatchBack's allocation algorithm. During integration, retain the real product's probability precision, lock/removal rules, and server validation, while replacing inaccessible controls. The prototype intentionally contains no card purchasing or selection service. The custom editor's fixture state is independent of the published-pack demonstrations.
+
 ## Acceptance coverage
 
 | Check | Coverage |
@@ -63,9 +73,12 @@ Implement the adapter against the real authenticated service, whose response mus
 | Pending, rejected, mismatched, and failed verification cannot show success | Domain and browser tests |
 | URL flags and arbitrary opening IDs cannot grant paid presentation | Domain and browser tests against the fixture adapter |
 | No horizontal overflow at tested widths | Browser layout assertion and screenshots |
+| Keyboard can reach and edit custom odds; changes are described accessibly | Desktop/mobile browser tests for Tab, arrows, Home/End, Enter, Escape, labels, and live-region text |
+| Custom sliders support pointer/touch and inputs handle invalid drafts | Desktop pointer and mobile touch-emulation tests |
+| Custom odds retain 100%, preserve locks, and recover from 0%/100% | Domain tests and browser tests, including fractional remainders and reset |
 
 Before real integration can be accepted, add backend tests for current-user ownership, settled payment plus persisted award, pending award, unauthorized opening IDs, replay/refresh idempotency, and demo flows producing no payment or vault writes. Add integration checks for publication/cache/asset version consistency and keyboard/screen-reader checks in the real app. Those real-service checks cannot run in this independent proposal.
 
 ## Outreach draft
 
-Hey! I found two small inconsistencies while trying CatchBack: Rags to Riches says 70% win rate on the homepage and 67% in the selector, and the demo result says a card was added to the vault even though no purchase happened. I built a small React/TypeScript prototype showing how I'd keep the odds consistent and make demo results clearer, with desktop/mobile tests. It uses sample data since I don't have your source. Happy to walk you through it and implement it in the real app if useful.
+Hey! I found a few things while trying CatchBack: Rags to Riches says 70% win rate on the homepage and 67% in the selector, the demo result says a card was added to the vault, and the custom odds controls aren't reachable by keyboard. I built a small React/TypeScript prototype showing proposed fixes, with desktop/mobile tests. It uses sample data since I don't have your source. Happy to walk you through it and implement it in the real app if useful.
