@@ -1,84 +1,36 @@
 # CatchBack fix proposals
 
-A runnable React/TypeScript proposal for three observed UX issues. This workspace started empty; it contains no CatchBack source code. All data and paid-success responses are local fixtures. Nothing here buys a pack, creates an account, adds a card to a real vault, or calls CatchBack services. Nothing has been deployed.
+A React/TypeScript prototype using sample data. I don’t have CatchBack’s source code; these changes demonstrate proposed fixes and have not been deployed to its website.
 
-## Run
+## What’s broken
 
-Use Node 22.18+ (verified locally with Node 25):
+- **Conflicting win rates:** QA recorded 70% on the homepage and 67% in the Rags to Riches pack selector.
+- **Misleading demo result:** After Open Demo → Skip, the page says a card was added to the vault while another panel says no purchase was made.
+- **Inaccessible custom odds:** Percentage and slider controls cannot be reached or edited with a keyboard.
+
+## Why it matters
+
+- Conflicting odds make it harder to understand a pack’s chances and trust its promotion.
+- The demo confirmation can make users believe they own a card they haven’t received.
+- Inaccessible controls prevent keyboard users from configuring a pack.
+
+## How I fixed it in this prototype
+
+- **Consistent odds:** One versioned configuration drives the promotion, badge, odds, and accessible text. Rates are calculated rather than hardcoded; numeric claims disappear during loading, errors, expiry, or version mismatches. Promotional artwork contains no embedded rate. The example defines a win as reference value at least equal to pack price, before fees—not guaranteed cash profit. CatchBack would need to approve the definition.
+- **Clear demo results:** Added “Demo — no card awarded” above the card, hypothetical value language, and “Explore Packs.” A separate paid view retains the vault confirmation. URL flags cannot select paid success; real integration requires authenticated server verification of payment and the award.
+- **Accessible editing:** Added labelled native number inputs and sliders, keyboard navigation, lock controls, validation, and change announcements. Recalculation preserves locked values and an exact 100% total using an illustrative allocation policy.
+
+## Validation
+
+Build passes, with **16 logic tests and 30 browser tests** across desktop and mobile-sized Chromium. Real-service integration and manual screen-reader checks remain necessary.
+
+## Run locally
+
+Node 22.18+:
 
 ```sh
 npm ci
 npm run dev
-npm run build
-npm test
-npm run test:e2e
 ```
 
-Open the local URL printed by Vite. Review controls simulate fresh, updated, loading, failed, expired, and mismatched pack data, plus demo, paid, pending, and unverified results. They belong to this proposal harness and should not be copied into the customer experience. The paid fixture is explicitly labelled; its `/vault` link is an integration placeholder.
-
-Browser tests use installed Chrome on macOS when available, otherwise Playwright Chromium (`npx playwright install chromium`). Desktop is 1440×900; mobile is Chromium at 390×844 with touch emulation. This is not a claim of real iOS Safari or Android testing. Screenshots are written under the ignored `test-results/` directory.
-
-## 1. Consistent win rates
-
-**Problem:** QA on October 18, 2026 recorded 70% on the homepage promotion and 67% in the pack selector. Displayed odds were 33.00% for a $12.50 booster in a $25 pack, followed by 65.48%, 0.16%, and 1.37% in higher value bands. The displayed probabilities total 100.01%; rounded UI figures must not become authoritative probability inputs. The supplied homepage screenshot does not visibly capture the 70% promotion, although the report and JSON record it.
-
-**Proposal:** Publish one immutable pack version containing price, complete unrounded odds, valuation snapshot, validity window, and the product-approved definition of a win. Derive the banner, badge, and odds from the same snapshot. This example uses “reference value at least pack price, before fees or shipping”; this is a proposed definition requiring product approval, not a statement of CatchBack's existing policy. It includes equality and explicitly does not mean cash profit.
-
-- `src/pack.ts` validates the version, validity window, metric, values, and complete distribution; it derives the rate from integer weights.
-- `src/usePublishedPack.ts` shares one loaded snapshot and hides claims during loading, failures, version mismatches, and expiry. It cancels superseded requests and clears expired claims even if the page stays open.
-- `src/PackViews.tsx` uses the same rate and definition for visible and accessible text. Promotional artwork is decorative and contains no numeric claim. The same formatting applies everywhere.
-- `src/fixtures.ts` uses deliberately synthetic distributions (67% and 60%) to demonstrate change. They do not reconstruct actual CatchBack odds or lock the product to 67%. Basis points are an example precision; use the real service's exact probability representation if it needs greater precision.
-
-### Integration requirements
-
-Replace the fixture loader with the real source of truth. Decode untrusted API responses with runtime schema validation before passing them to this typed contract. Publish the configuration and any promotional assets atomically under one version. Revalidate the active version according to an agreed freshness policy, including cache/CDN invalidation and resume/focus behavior; never combine a new banner with old odds. This prototype's fixture lifetime is five minutes, not a proposed production policy.
-
-If existing artwork contains “70%” or another rate, replace it with rate-free art and an HTML overlay. If image text must remain, regenerate the image for each version, use a versioned asset URL and matching accessible text, and withhold it until the asset and configuration versions agree. Updating alt text alone leaves the visible contradiction intact.
-
-The server must independently enforce the applicable pack version and odds when a real opening occurs. The display validity window is not transaction authorization. The product must also specify the valuation source/time, price basis (including discounts), treatment of fees, and metric rounding. This sample metric supports reference-value comparison only; a different approved definition needs an explicit implementation and tests.
-
-## 2. Unambiguous demo results
-
-**Problem:** Open Demo → Skip displayed “Your pull has been added to your vault” alongside a separate panel saying no purchase was made. QA recorded Tapu Bulu ($29.10) on mobile and Greninja-Gold Star ($29.00) on desktop.
-
-**Proposal:** `src/ResultView.tsx` puts “Demo — no card awarded” above the card, calls it a simulated pull, uses hypothetical reference-value language, and replaces the vault CTA with “Explore Packs.” Skip and completing the demo reveal reach the same result. Paid presentation retains the award confirmation and vault CTA. Pending and unverified states cannot render success.
-
-`src/result.ts` treats `demo=true` only as demo intent. Other URL flags cannot produce paid success. A paid view requires the verification adapter to return a persisted award for the requested opening. A TypeScript type, browser state, query string, or fixture is not payment evidence and cannot secure a real backend.
-
-### Integration requirements
-
-Implement the adapter against the real authenticated service, whose response must confirm the current user's access, settled payment, and persisted vault award. A settlement without an award remains pending. Unauthorized, missing, refunded/invalid as applicable, or mismatched records must not return an awarded response. Keep actual awarding in the existing authoritative, idempotent backend flow; rendering or refreshing a success page must not create an award. This proposal does not assume any specific API route, database, payment provider, or existing architecture.
-
-## 3. Keyboard-accessible custom odds
-
-**Problem:** The supplied QA report records an editable percentage implemented as a span and a visual slider implemented as a div, neither reachable by Tab. A pointer edit from 20% to 30% redistributed the four other equal probabilities to 17.5% each.
-
-**Proposal:** `src/CustomOddsEditor.tsx` uses labelled native number and range inputs. Tab reaches the percentage, slider, and lock button in order. Numeric edits apply on Enter or blur; Escape cancels a draft. Sliders support native keyboard controls, pointer, and touch. Visible focus, accessible percent values, inline errors associated with their inputs, and a polite announcement explain recalculated probabilities. Announcements wait 300 ms after changes to avoid announcing every slider movement. This DOM behavior is tested; actual screen-reader speech still needs manual checks in the real app.
-
-`src/customOdds.ts` maintains a 100% total using integer basis points. The example redistribution policy preserves locked values and distributes the remainder proportionally among unlocked cards. When all peer weights are zero, it uses equal shares. Deterministic remainder allocation avoids rounding loss. When every peer is locked, editing is disabled with an explanation. Reset restores five illustrative cards at 20% and unlocks them. Empty, invalid, out-of-range, and over-precise numeric drafts leave the underlying odds unchanged.
-
-This policy is an illustrative implementation, not a claim about CatchBack's allocation algorithm. During integration, retain the real product's probability precision, lock/removal rules, and server validation, while replacing inaccessible controls. The prototype intentionally contains no card purchasing or selection service. The custom editor's fixture state is independent of the published-pack demonstrations.
-
-## Acceptance coverage
-
-| Check | Coverage |
-| --- | --- |
-| Banner, selector, odds, and accessible definition use the same version | Browser tests on desktop and mobile |
-| New configuration changes every rate; 67% is not fixed | Domain and browser tests |
-| Loading, fetch failure, expiry, and version mismatch hide rates and odds | Domain and browser tests, including expiry of an open page |
-| Probability totals and win boundary are correct | Domain tests; equality counts under this example definition |
-| Demo Skip and completed reveal show no-award heading above the card | Browser tests on desktop and mobile |
-| Demo uses hypothetical language and Explore Packs, without a vault CTA | Browser tests on desktop and mobile |
-| Paid fixture preserves award confirmation and vault link | Browser tests on desktop and mobile |
-| Pending, rejected, mismatched, and failed verification cannot show success | Domain and browser tests |
-| URL flags and arbitrary opening IDs cannot grant paid presentation | Domain and browser tests against the fixture adapter |
-| No horizontal overflow at tested widths | Browser layout assertion and screenshots |
-| Keyboard can reach and edit custom odds; changes are described accessibly | Desktop/mobile browser tests for Tab, arrows, Home/End, Enter, Escape, labels, and live-region text |
-| Custom sliders support pointer/touch and inputs handle invalid drafts | Desktop pointer and mobile touch-emulation tests |
-| Custom odds retain 100%, preserve locks, and recover from 0%/100% | Domain tests and browser tests, including fractional remainders and reset |
-
-Before real integration can be accepted, add backend tests for current-user ownership, settled payment plus persisted award, pending award, unauthorized opening IDs, replay/refresh idempotency, and demo flows producing no payment or vault writes. Add integration checks for publication/cache/asset version consistency and keyboard/screen-reader checks in the real app. Those real-service checks cannot run in this independent proposal.
-
-## Outreach draft
-
-Hey! I found a few things while trying CatchBack: Rags to Riches says 70% win rate on the homepage and 67% in the selector, the demo result says a card was added to the vault, and the custom odds controls aren't reachable by keyboard. I built a small React/TypeScript prototype showing proposed fixes, with desktop/mobile tests. It uses sample data since I don't have your source. Happy to walk you through it and implement it in the real app if useful.
+Checks: `npm run build`, `npm test`, and `npm run test:e2e`. Browser tests use installed Chrome on macOS, or Playwright Chromium (`npx playwright install chromium`).
