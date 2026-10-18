@@ -5,6 +5,7 @@ import { resolveOpening, type OpeningResult, type VerifiedOpening } from "./resu
 import { ResultView } from "./ResultView.tsx";
 import { usePublishedPack } from "./usePublishedPack.ts";
 import { CustomOddsEditor } from "./CustomOddsEditor.tsx";
+import { CatalogBrowser } from "./CatalogBrowser.tsx";
 
 export default function App() {
   const [scenario, setScenario] = useState<PackScenario>("current");
@@ -36,9 +37,9 @@ export default function App() {
     <header className="site-header"><a href="#" className="wordmark">CATCHBACK <span>/ proposals</span></a>
       <a href="#result-preview">Result preview <span aria-hidden="true">↗</span></a></header>
     <main className="layout">
-      <section className="intro"><span className="eyebrow">Three details. A clearer experience.</span>
+      <section className="intro"><span className="eyebrow">Four details. A clearer experience.</span>
         <h1>Clear odds.<br /><span>Honest outcomes.</span></h1>
-        <p>A working proposal for consistent pack promotions, unmistakable demos, and accessible custom odds.</p>
+        <p>A working proposal for consistent promotions, unmistakable demos, accessible odds, and reliable pack browsing.</p>
       </section>
       <aside className="review-controls" aria-label="Proposal controls">
         <div><strong>Review the proposal</strong><p>These controls simulate integration states using local fixtures.</p></div>
@@ -77,6 +78,11 @@ export default function App() {
         <div className="section-title"><span className="number">03</span><div><h2 id="custom-odds-title">Custom odds, on your terms</h2>
           <p>Edit with a keyboard, pointer, or touch. Every control has a name and every change keeps the total at 100%.</p></div></div>
         <CustomOddsEditor />
+      </section>
+      <section id="catalog-preview" aria-labelledby="catalog-title">
+        <div className="section-title"><span className="number">04</span><div><h2 id="catalog-title">Room to filter. Room to browse.</h2>
+          <p>Filters wrap above a separate pagination row. Both pagers browse the same catalog and keep your selections.</p></div></div>
+        <CatalogBrowser />
       </section>
       <footer>Example implementation for outreach. Integration requires CatchBack’s real configuration, valuation, authentication, and award services.</footer>
     </main>
