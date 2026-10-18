@@ -1,20 +1,29 @@
 {
-  "name": "magnetic-acoustic-322eb56b",
+  "name": "catchback-fix-proposals",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "test": "tests"
-  },
+  "description": "Independent React/TypeScript fix proposals using illustrative fixtures",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "test": "node --test tests/domain.test.ts",
+    "test:e2e": "playwright test"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
-  }
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@types/node": "24.10.0",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "typescript": "5.9.3",
+    "vite": "7.1.12"
+  },
+  "engines": { "node": ">=22.18.0" }
 }
