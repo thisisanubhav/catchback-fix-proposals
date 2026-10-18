@@ -75,15 +75,15 @@ test("paid fixture preserves the award confirmation and pending/error states do 
   await page.goto("/");
   const result = page.getByRole("region", { name: "Opening result", exact: true });
   await page.getByRole("button", { name: "Paid success fixture" }).click();
-  await expect(result.getByRole("heading")).toHaveText("Your pull has been added to your vault");
+  await expect(result.getByRole("heading", { level: 3 })).toHaveText("Your pull has been added to your vault");
   await expect(result.getByRole("link", { name: "View My Vault" })).toHaveAttribute("href", "/vault");
   await expect(result).not.toContainText("Demo — no card awarded");
   await result.screenshot({ path: testInfo.outputPath("paid-result.png") });
   await page.getByRole("button", { name: "Pending fixture" }).click();
-  await expect(result.getByRole("heading")).toHaveText("Your opening is still processing");
+  await expect(result.getByRole("heading", { level: 3 })).toHaveText("Your opening is still processing");
   await expect(result.getByRole("link", { name: "View My Vault" })).toHaveCount(0);
   await page.getByRole("button", { name: "Unverified fixture" }).click();
-  await expect(result.getByRole("heading")).toHaveText("We couldn’t verify this opening");
+  await expect(result.getByRole("heading", { level: 3 })).toHaveText("We couldn’t verify this opening");
   await expect(result.getByRole("link", { name: "View My Vault" })).toHaveCount(0);
 });
 
@@ -91,7 +91,7 @@ test("URL parameters cannot enable paid success", async ({ page }) => {
   for (const query of ["demo=false&paid=true", "demo=false&opening_id=forged&payment_status=paid", "demo=true&opening_id=forged&paid=true"]) {
     await page.goto(`/?${query}`);
     const result = page.getByRole("region", { name: "Opening result", exact: true });
-    await expect(result.getByRole("heading")).toHaveText(query.startsWith("demo=true")
+    await expect(result.getByRole("heading", { level: 3 })).toHaveText(query.startsWith("demo=true")
       ? "Demo — no card awarded" : "We couldn’t verify this opening");
     await expect(result.getByRole("link", { name: "View My Vault" })).toHaveCount(0);
   }
