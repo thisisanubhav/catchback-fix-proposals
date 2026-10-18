@@ -59,7 +59,7 @@ test("both pagers are independently clickable and preserve selections at every t
     await activate(previous);
     await expectPage(1);
     await expect(first).toHaveAttribute("aria-pressed", "true");
-    await expect(catalog.getByLabel("Sort", { exact: true })).toHaveValue("asc");
+    await expect(catalog.getByRole("combobox", { name: "Sort", exact: true })).toHaveValue("asc");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await catalog.screenshot({ path: info.outputPath(`catalog-${size.width}.png`) });
   }
@@ -74,11 +74,11 @@ test("sorting and filters reset the page without clearing selected card IDs", as
     const bottom = catalog.getByRole("navigation", { name: "Bottom catalog pagination" });
     await catalog.getByRole("button", { name: "Select Example card 01", exact: true }).click();
     await top.getByRole("button", { name: "Next page" }).click();
-    await catalog.getByLabel("Sort", { exact: true }).selectOption("desc");
+    await catalog.getByRole("combobox", { name: "Sort", exact: true }).selectOption("desc");
     await expect(top).toContainText("Page 1 of 3");
     await expect(bottom).toContainText("Page 1 of 3");
     await expect(catalog.getByRole("list", { name: "Card results" }).getByRole("button").first()).toHaveAccessibleName("Select Example card 18");
-    await catalog.getByLabel("Category", { exact: true }).selectOption("Sports");
+    await catalog.getByRole("combobox", { name: "Category", exact: true }).selectOption("Sports");
     await expect(top).toContainText("Page 1 of 1");
     await expect(top.getByRole("button", { name: "Next page" })).toBeDisabled();
     await catalog.getByLabel("Search cards", { exact: true }).fill("no-matching-card");
@@ -86,7 +86,7 @@ test("sorting and filters reset the page without clearing selected card IDs", as
     await expect(bottom).toContainText("Page 0 of 0");
     for (const button of await catalog.getByRole("navigation").getByRole("button").all()) await expect(button).toBeDisabled();
     await catalog.getByRole("button", { name: "Reset filters" }).click();
-    await catalog.getByLabel("Sort", { exact: true }).selectOption("asc");
+    await catalog.getByRole("combobox", { name: "Sort", exact: true }).selectOption("asc");
     await expect(catalog.getByRole("button", { name: "Select Example card 01", exact: true })).toHaveAttribute("aria-pressed", "true");
     await expect(catalog.getByRole("complementary", { name: "Selected cards" })).toContainText("1 selected");
   }
