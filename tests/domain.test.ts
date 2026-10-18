@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { sampleGateway, sampleSnapshot } from "../src/fixtures.ts";
 import { rateLabel, validateSnapshot, winRatePercent } from "../src/pack.ts";
 import { resolveOpening, type ResultGateway } from "../src/result.ts";
+import { maximumOdds, rebalanceOdds, sampleCustomOdds } from "../src/customOdds.ts";
 
 const now = 1_800_000_000_000;
 
@@ -85,5 +86,54 @@ test("verification failures, mismatched IDs, and missing award IDs fail closed",
   ];
   for (const gateway of gateways) {
     assert.equal((await resolveOpening(new URLSearchParams("opening_id=123"), gateway)).kind, "unavailable");
+  }
+});
+
+test("custom odds reproduce the observed 20% to 30% redistribution without mutating input", () => {
+  const original = sampleCustomOdds();
+  const result = rebalanceOdds(original, "example-1", 3000);
+  assert.deepEqual(result.map(row => row.weightBps), [3000, 1750, 1750, 1750, 1750]);
+  assert.deepEqual(original.map(row => row.weightBps), [2000, 2000, 2000, 2000, 2000]);
+});
+
+test("custom odds preserve locks and distribute fractional remainders exactly", () => {
+  const rows = sampleCustomOdds();
+  rows[1].locked = true;
+  const result = rebalanceOdds(rows, "example-1", 3000);
+  assert.equal(result[1].weightBps, 2000);
+  assert.deepEqual(result.map(row => row.weightBps), [3000, 2000, 1667, 1667, 1666]);
+  assert.equal(maximumOdds(rows, "example-1"), 8000);
+  assert.throws(() => rebalanceOdds(rows, "example-1", 8001));
+  assert.throws(() => rebalanceOdds(rows, "example-2", 3000));
+});
+
+test("zero-weight peers recover equally after a 100% allocation", () => {
+  const all = rebalanceOdds(sampleCustomOdds(), "example-1", 10_000);
+  assert.deepEqual(all.map(row => row.weightBps), [10000, 0, 0, 0, 0]);
+  const reset = rebalanceOdds(all, "example-1", 2000);
+  assert.deepEqual(reset.map(row => row.weightBps), [2000, 2000, 2000, 2000, 2000]);
+});
+
+test("custom odds reject impossible edits and invalid distributions", () => {
+  for (const value of [-1, 10001, 0.1, NaN, Infinity]) {
+    assert.throws(() => rebalanceOdds(sampleCustomOdds(), "example-1", value));
+  }
+  const locked = sampleCustomOdds().map((row, index) => ({ ...row, locked: index !== 0 }));
+  assert.equal(maximumOdds(locked, "example-1"), 2000);
+  assert.throws(() => rebalanceOdds(locked, "example-1", 1900));
+  assert.deepEqual(rebalanceOdds(locked, "example-1", 2000), locked);
+  assert.throws(() => rebalanceOdds([], "missing", 0));
+  const incomplete = sampleCustomOdds();
+  incomplete[0].weightBps = 1999;
+  assert.throws(() => rebalanceOdds(incomplete, "example-1", 2000));
+});
+
+test("repeated fractional custom edits keep exact totals and nonnegative integer weights", () => {
+  let rows = sampleCustomOdds();
+  for (let index = 0; index < 100; index++) {
+    const id = rows[index % rows.length].id;
+    rows = rebalanceOdds(rows, id, (index * 997) % 10001);
+    assert.equal(rows.reduce((sum, row) => sum + row.weightBps, 0), 10000);
+    assert.ok(rows.every(row => Number.isInteger(row.weightBps) && row.weightBps >= 0));
   }
 });
